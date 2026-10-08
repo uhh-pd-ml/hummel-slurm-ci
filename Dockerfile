@@ -10,7 +10,7 @@ ARG HUMMEL_UID=1000
 
 LABEL org.opencontainers.image.title="hummel-slurm-ci" \
       org.opencontainers.image.description="Slurm ${SLURM_VERSION} configured like the Hummel-2 cluster, for CI of batch submission tools" \
-      org.opencontainers.image.source="https://github.com/cburgard/hummel-slurm-ci"
+      org.opencontainers.image.source="https://github.com/uhh-pd-ml/hummel-slurm-ci"
 
 # Python >= 3.11 for humsub; `python3` itself stays the system one (dnf needs it).
 RUN dnf -y install python3.12 python3.12-pip rsync sudo \

@@ -1,0 +1,78 @@
+Hummel-Slurm-CI Restricted Use License, version 1
+
+Copyright (c) 2026 Carsten Burgard and the other authors of this repository
+(the "Licensor").
+
+1. Scope
+
+   This license applies to the files of this repository that were written by
+   the Licensor (the "Software"), including the configuration files, scripts,
+   Dockerfile and documentation, and to the container images built from them.
+   It does not apply to third-party components, which remain under their own
+   licenses: in particular the git submodule "slurm-docker" (MIT License), and
+   the Slurm Workload Manager and the operating-system packages contained in
+   the container images.  Nothing in this license restricts rights that those
+   licenses grant.
+
+2. Who may use the Software
+
+   The Software may be used only by persons who are, at the time of use,
+   members of or affiliated with Universitaet Hamburg (University of Hamburg),
+   for example employees, students, doctoral candidates, guest lecturers,
+   guest researchers and other persons holding a formal affiliation with the
+   university.  Use on behalf of a person who is not so affiliated, or by an
+   organisation other than Universitaet Hamburg, is not permitted.
+
+3. Permitted purpose
+
+   The Software may be used only for developing, testing and maintaining
+   software that is intended to facilitate the smooth operation of, or the
+   orderly use of, the Hummel-2 high-performance computing cluster of
+   Universitaet Hamburg.  Any other use, including commercial use, is not
+   permitted.
+
+4. Permitted copying
+
+   Subject to sections 2 and 3, you may make and use verbatim, unmodified
+   copies of the Software, and run container images built from it without
+   modification, for the permitted purpose.  Copies must retain this license
+   and all copyright notices.  Redistribution of verbatim copies is permitted
+   only to persons who satisfy section 2, and only together with this license.
+
+5. Prohibited acts
+
+   Except as expressly permitted in section 4, you may not:
+
+   a) modify, adapt, translate or create derivative works of the Software;
+   b) distribute or publish modified versions of the Software;
+   c) sublicense the Software or license it under any other terms, or remove
+      or alter this license or any notice in it.
+
+   Configuring the Software through the build arguments, environment
+   variables and command-line options that it documents is use, not
+   modification.
+
+6. Rights of the Licensor
+
+   The Licensor retains all rights not expressly granted.  This license does
+   not restrict the Licensor in any way, including the Licensor's right to
+   modify the Software and to license it to others on other terms.
+
+7. Termination
+
+   Any breach of this license terminates your rights under it automatically.
+
+8. No warranty; limitation of liability
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+   THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.  The Software
+   emulates parts of the Hummel-2 cluster for testing; it is neither
+   endorsed by nor an official product of the Regionales Rechenzentrum or
+   Universitaet Hamburg, and it may differ from the real cluster.
+
+9. Governing law
+
+   This license is governed by the laws of the Federal Republic of Germany.

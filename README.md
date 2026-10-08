@@ -76,6 +76,14 @@ build args if you need other names (the default accounts of your tool, e.g.
 Keep a smoke test against the real cluster for releases; this image catches
 logic errors, not site surprises.
 
+## License
+
+Restricted: use is limited to members of or persons affiliated with Universitaet
+Hamburg, for developing software that facilitates the operation of the Hummel-2
+cluster.  Verbatim copies may be used; **modification and relicensing are not
+permitted**.  See [LICENSE](LICENSE).  Third-party components (the
+`slurm-docker` submodule, Slurm, OS packages) keep their own licenses.
+
 ## Updating
 
 * Slurm version: `make SLURM_VERSION=25.05.7` (must be a version the submodule
