@@ -17,7 +17,7 @@ source in the upstream Dockerfile).
 
 ## Using the image in another repository's CI
 
-The CI of this repository pushes `ghcr.io/<owner>/hummel-slurm-ci:<slurm-version>`
+The CI of this repository pushes `ghcr.io/uhh-pd-ml/hummel-slurm-ci:<slurm-version>`
 and `:latest`.  Start it as a service, wait for readiness, then run your tests in it:
 
 ```yaml
@@ -29,7 +29,7 @@ jobs:
       - name: Start Hummel Slurm
         run: |
           docker run -d --privileged --init --name hummel -h slurmctl \
-            -v "$PWD:/src:ro" ghcr.io/<owner>/hummel-slurm-ci:latest
+            -v "$PWD:/src:ro" ghcr.io/uhh-pd-ml/hummel-slurm-ci:latest
           for i in $(seq 1 180); do docker exec hummel test -e /run/hummel-ready && break; sleep 1; done
       - name: Test
         run: docker exec -u testuser -w /beegfs/uu/testuser/testuser hummel bash -lc \
