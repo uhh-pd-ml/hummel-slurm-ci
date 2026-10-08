@@ -1,0 +1,20 @@
+#!/bin/bash
+# Stand-in for Hummel's apptainer: `apptainer exec [opts] IMAGE CMD...` skips the
+# image and runs CMD directly, translating APPTAINERENV_X=Y into X=Y.
+# Enough for humsub's runner; it does NOT isolate anything.
+[ "${1:-}" = "exec" ] || { echo "apptainer stub: only 'exec' is supported" >&2; exit 2; }
+shift
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --nv|--cleanenv|-c|--containall|-C) shift ;;
+        -B|--bind|--pwd|--env|-H|--home) shift 2 ;;
+        -*) shift ;;
+        *) break ;;
+    esac
+done
+[ $# -ge 2 ] || { echo "apptainer stub: IMAGE and COMMAND required" >&2; exit 2; }
+shift   # image
+while IFS='=' read -r k v; do
+    case "$k" in APPTAINERENV_*) export "${k#APPTAINERENV_}=$v" ;; esac
+done < <(env)
+exec "$@"

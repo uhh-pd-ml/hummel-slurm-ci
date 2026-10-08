@@ -1,0 +1,49 @@
+name: image
+
+# Builds the image from the pinned slurm-docker submodule, runs the self test
+# on every push/PR, and pushes to this repository's registry (ghcr.io) from main
+# and from tags.  A weekly run picks up base-OS security updates.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+env:
+  SLURM_VERSION: "24.11.7"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Image name (registry paths must be lower case)
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: make build IMAGE="$IMAGE" SLURM_VERSION="$SLURM_VERSION"
+
+      - name: Self test
+        run: make test IMAGE="$IMAGE" SLURM_VERSION="$SLURM_VERSION"
+
+      - name: Log in to ghcr.io
+        if: github.event_name != 'pull_request'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Push
+        if: github.event_name != 'pull_request'
+        run: |
+          make push IMAGE="$IMAGE" SLURM_VERSION="$SLURM_VERSION"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            docker tag "$IMAGE:$SLURM_VERSION" "$IMAGE:${GITHUB_REF_NAME}"
+            docker push "$IMAGE:${GITHUB_REF_NAME}"
+          fi

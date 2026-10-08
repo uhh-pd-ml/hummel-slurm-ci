@@ -1,0 +1,35 @@
+#!/bin/bash
+# Runs after slurm-docker's entrypoint has started the daemons: waits for the
+# cluster, creates the Hummel-style accounting tree, then signals readiness by
+# creating /run/hummel-ready.  With arguments, execs them afterwards.
+set -uo pipefail
+. /etc/hummel-ci.env
+GROUP="${HUMMEL_GROUP}"
+USER_="${HUMMEL_USER}"
+
+echo "[hummel-init] waiting for slurmctld and nodes..."
+for _ in $(seq 1 180); do
+    if sinfo -h -o '%T' 2>/dev/null | grep -q idle \
+       && sacctmgr -n -P list cluster 2>/dev/null | grep -q '^hummel|'; then
+        break
+    fi
+    sleep 1
+done
+sinfo -h -o '%T' 2>/dev/null | grep -q idle || { echo "[hummel-init] no idle node"; exit 1; }
+
+# Accounts per partition as on Hummel: <group>_std / _big / _gpu, the gpu
+# account also valid on gputest (see `sacctmgr show assoc` on the cluster).
+sa() { sacctmgr -i "$@" >/dev/null 2>&1 || true; }
+for kind in std big gpu; do
+    sa add account "${GROUP}_${kind}" Cluster=hummel Description="${GROUP} ${kind}" Organization="${GROUP}"
+done
+sa add user "${USER_}" Cluster=hummel Account="${GROUP}_std" Partition=std
+sa add user "${USER_}" Cluster=hummel Account="${GROUP}_big" Partition=big
+sa add user "${USER_}" Cluster=hummel Account="${GROUP}_gpu" Partition=gpu
+sa add user "${USER_}" Cluster=hummel Account="${GROUP}_gpu" Partition=gputest
+sa modify user "${USER_}" set DefaultAccount="${GROUP}_std"
+
+touch /run/hummel-ready
+echo "[hummel-init] ready (user ${USER_}, accounts ${GROUP}_{std,big,gpu})"
+if [ $# -gt 0 ]; then exec "$@"; fi
+exec sleep infinity
