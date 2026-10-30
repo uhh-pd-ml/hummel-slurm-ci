@@ -35,6 +35,9 @@ jobs:
       - name: Self test
         run: make test IMAGE="$IMAGE" SLURM_VERSION="$SLURM_VERSION"
 
+      - name: Self test (fast profile)
+        run: make test IMAGE="$IMAGE" SLURM_VERSION="$SLURM_VERSION" PROFILE=fast
+
       - name: Log in to ghcr.io
         if: github.event_name != 'pull_request'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin

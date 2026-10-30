@@ -5,6 +5,8 @@ ROCKY_VERSION ?= 9
 IMAGE         ?= hummel-slurm-ci
 BASE_IMAGE    ?= slurm-docker-base:$(SLURM_VERSION)-rl$(ROCKY_VERSION)
 CONTAINER     ?= hummel-slurm
+# scheduler timing of `make up`/`make test`: hummel (default, like Hummel-2) or fast (see README)
+PROFILE       ?= hummel
 # e.g. DOCKER_BUILD_FLAGS=--network=host when the default bridge has no working DNS
 DOCKER_BUILD_FLAGS ?=
 
@@ -28,7 +30,7 @@ build: base  ## base + Hummel layer
 
 up:  ## start the cluster and wait until it is ready
 	-docker rm -f $(CONTAINER) >/dev/null 2>&1
-	docker run -d --privileged --init --name $(CONTAINER) -h slurmctl $(IMAGE):$(SLURM_VERSION)
+	docker run -d --privileged --init --name $(CONTAINER) -h slurmctl -e HUMMEL_CI_PROFILE=$(PROFILE) $(IMAGE):$(SLURM_VERSION)
 	@for i in $$(seq 1 180); do \
 	  docker exec $(CONTAINER) test -e /run/hummel-ready 2>/dev/null && { echo "cluster ready"; exit 0; }; \
 	  sleep 1; done; \

@@ -43,6 +43,20 @@ submitted as `testuser` (account `testgrp_std|_big|_gpu`, home
 build args if you need other names (the default accounts of your tool, e.g.
 `kasieczka_gpu`, are then `<group>_gpu`).
 
+## Timing profiles
+
+`docker run -e HUMMEL_CI_PROFILE=...` (or `make up PROFILE=...`) selects the scheduler timing:
+
+| profile | scheduler | for |
+|---|---|---|
+| `hummel` (default) | Slurm's default loop intervals, as on Hummel-2: a job whose `--begin` time has come or whose dependency was released can wait ~15-30 s for the next scheduling pass on a busy cluster | tests of timing assumptions, release checks |
+| `fast` | `SchedulerParameters=sched_interval=1,bf_interval=1`: such jobs start within ~1-2 s | quick CI feedback |
+
+Neither profile changes time limits: their 1-minute granularity and the ~30 s tick on which slurmctld enforces them
+and delivers `--signal` are built into slurmctld.  Tests that need a job to reach its pre-timeout signal quickly can
+send it themselves, exactly as slurmctld does: `scancel --batch --signal=USR1 <jobid>` (for `--signal=B:USR1@N`).
+`/run/hummel-profile` names the active profile; images from before the profiles ignore the variable.
+
 ## What is emulated (observed on the real login nodes, 2026-10)
 
 | Aspect | Hummel-2 | here |
@@ -56,7 +70,7 @@ build args if you need other names (the default accounts of your tool, e.g.
 | Temp dirs | batch: `RRZ_GLOBAL_TMPDIR=/beegfs/scratch/<user>.<job>`, local `/tmp` | same; created by prolog, removed by epilog |
 | GPUs | 8x H100 per node | `Gres=gpu:h100:2` on one node, backed by `/dev/null` and `/dev/zero` |
 | apptainer | `/sw/env/system-gcc/apptainer/1.4.5/bin/apptainer` | stub that runs the command directly (no isolation) |
-| Signals/time | `--time`, `--signal=B:USR1@N` | real Slurm behaviour; time limits have 1-minute granularity, so a timeout test takes 1-2 minutes |
+| Signals/time | `--time`, `--signal=B:USR1@N` | real Slurm behaviour; time limits have 1-minute granularity, so a timeout test takes 1-2 minutes (or send the signal yourself, see Timing profiles) |
 
 ## Known differences (do not rely on these)
 
