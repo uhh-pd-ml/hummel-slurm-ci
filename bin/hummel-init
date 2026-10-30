@@ -8,14 +8,20 @@ GROUP="${HUMMEL_GROUP}"
 USER_="${HUMMEL_USER}"
 
 echo "[hummel-init] waiting for slurmctld and nodes..."
+# all nodes, not just one: a client that starts right after readiness may ask for two nodes (-N2), and a node that has
+# not registered yet makes that fail with "Requested node configuration is not available"
+all_idle() {
+    local states
+    states=$(sinfo -h -N -o '%T' 2>/dev/null) || return 1
+    [ -n "$states" ] && ! grep -qv '^idle$' <<<"$states"
+}
 for _ in $(seq 1 180); do
-    if sinfo -h -o '%T' 2>/dev/null | grep -q idle \
-       && sacctmgr -n -P list cluster 2>/dev/null | grep -q '^hummel|'; then
+    if all_idle && sacctmgr -n -P list cluster 2>/dev/null | grep -q '^hummel|'; then
         break
     fi
     sleep 1
 done
-sinfo -h -o '%T' 2>/dev/null | grep -q idle || { echo "[hummel-init] no idle node"; exit 1; }
+all_idle || { echo "[hummel-init] not all nodes are idle:"; sinfo -N; exit 1; }
 
 # Accounts per partition as on Hummel: <group>_std / _big / _gpu, the gpu
 # account also valid on gputest (see `sacctmgr show assoc` on the cluster).
@@ -29,7 +35,31 @@ sa add user "${USER_}" Cluster=hummel Account="${GROUP}_gpu" Partition=gpu
 sa add user "${USER_}" Cluster=hummel Account="${GROUP}_gpu" Partition=gputest
 sa modify user "${USER_}" set DefaultAccount="${GROUP}_std"
 
+# Timing profile (docker run -e HUMMEL_CI_PROFILE=...):
+#   hummel (default)  Hummel-2's scheduler timing: Slurm's default loop intervals, so a job whose --begin time has come
+#                     or whose dependency was released can wait ~15-30 s for the next scheduling pass.
+#   fast              the main and backfill scheduling loops run every second, so such jobs start within ~1-2 s.  For
+#                     quick CI feedback; time limits (1-minute granularity) and the ~30 s tick on which slurmctld
+#                     enforces them and delivers --signal are built into slurmctld and not affected.
+PROFILE="${HUMMEL_CI_PROFILE:-hummel}"
+case "$PROFILE" in
+    hummel) ;;
+    fast)
+        sed -i '/^SchedulerParameters=/d' /etc/slurm/slurm.conf
+        echo "SchedulerParameters=sched_interval=1,bf_interval=1" >> /etc/slurm/slurm.conf
+        scontrol reconfigure || { echo "[hummel-init] scontrol reconfigure failed"; exit 1; }
+        for _ in $(seq 1 60); do
+            scontrol show config 2>/dev/null | grep -q '^SchedulerParameters *= *sched_interval=1' && break
+            sleep 1
+        done
+        scontrol show config | grep -q '^SchedulerParameters *= *sched_interval=1' \
+            || { echo "[hummel-init] the fast scheduler settings did not take effect"; exit 1; }
+        ;;
+    *) echo "[hummel-init] unknown HUMMEL_CI_PROFILE=$PROFILE (hummel | fast)"; exit 1 ;;
+esac
+echo "$PROFILE" > /run/hummel-profile
+
 touch /run/hummel-ready
-echo "[hummel-init] ready (user ${USER_}, accounts ${GROUP}_{std,big,gpu})"
+echo "[hummel-init] ready (user ${USER_}, accounts ${GROUP}_{std,big,gpu}, profile ${PROFILE})"
 if [ $# -gt 0 ]; then exec "$@"; fi
 exec sleep infinity
